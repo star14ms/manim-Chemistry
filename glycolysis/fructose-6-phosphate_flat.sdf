@@ -1,5 +1,5 @@
-15648788
-  -OEChem-09072417392D
+719
+  -OEChem-09072417422D
 
  29 29  0     1  0  0  0  0  0999 V2000
     6.8909   -1.8094    0.0000 P   0  0  0  0  0  0  0  0  0  0  0  0
@@ -12,10 +12,10 @@
     7.4787   -2.6184    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
     7.6999   -1.2216    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
     6.0819   -2.3972    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
-    3.4118    0.6552    0.0000 C   0  0  2  0  0  0  0  0  0  0  0  0
-    3.7208   -0.2959    0.0000 C   0  0  1  0  0  0  0  0  0  0  0  0
-    4.2208    1.2430    0.0000 C   0  0  2  0  0  0  0  0  0  0  0  0
-    4.7208   -0.2959    0.0000 C   0  0  1  0  0  0  0  0  0  0  0  0
+    3.4118    0.6552    0.0000 C   0  0  3  0  0  0  0  0  0  0  0  0
+    3.7208   -0.2959    0.0000 C   0  0  3  0  0  0  0  0  0  0  0  0
+    4.2208    1.2430    0.0000 C   0  0  3  0  0  0  0  0  0  0  0  0
+    4.7208   -0.2959    0.0000 C   0  0  3  0  0  0  0  0  0  0  0  0
     5.3086   -1.1049    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
     4.8086    2.0520    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
     2.9734    0.2168    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
@@ -37,11 +37,11 @@
   1 10  2  0  0  0  0
   2 13  1  0  0  0  0
   2 14  1  0  0  0  0
- 11  3  1  1  0  0  0
+  3 11  1  0  0  0  0
   3 24  1  0  0  0  0
- 12  4  1  1  0  0  0
+  4 12  1  0  0  0  0
   4 25  1  0  0  0  0
- 13  5  1  1  0  0  0
+  5 13  1  0  0  0  0
   5 26  1  0  0  0  0
   6 15  1  0  0  0  0
   7 16  1  0  0  0  0
@@ -54,7 +54,7 @@
  12 14  1  0  0  0  0
  12 18  1  0  0  0  0
  13 16  1  0  0  0  0
- 14 15  1  6  0  0  0
+ 14 15  1  0  0  0  0
  14 19  1  0  0  0  0
  15 20  1  0  0  0  0
  15 21  1  0  0  0  0
@@ -62,7 +62,7 @@
  16 23  1  0  0  0  0
 M  END
 > <PUBCHEM_COMPOUND_CID>
-15648788
+719
 
 > <PUBCHEM_COMPOUND_CANONICALIZED>
 1
@@ -83,28 +83,28 @@ M  END
 AAADccBgPAIAAAAAAAAAAAAAAAAAASAAAAAAAAAAAAAAAAAAAAAAGgAACCAACBSggAIACAAABxAAQAAAAIAAAAAAAAAAAAAAAAAREAIAAAACQAAFAAAHAAHAYAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
 
 > <PUBCHEM_IUPAC_OPENEYE_NAME>
-[(2R,3S,4R,5S)-3,4,5-trihydroxy-5-(hydroxymethyl)tetrahydrofuran-2-yl]methyl dihydrogen phosphate
+[3,4,5-trihydroxy-5-(hydroxymethyl)tetrahydrofuran-2-yl]methyl dihydrogen phosphate
 
 > <PUBCHEM_IUPAC_CAS_NAME>
-[(2R,3S,4R,5S)-3,4,5-trihydroxy-5-(hydroxymethyl)-2-oxolanyl]methyl dihydrogen phosphate
+[3,4,5-trihydroxy-5-(hydroxymethyl)-2-oxolanyl]methyl dihydrogen phosphate
 
 > <PUBCHEM_IUPAC_NAME_MARKUP>
-[(2<I>R</I>,3<I>S</I>,4<I>R</I>,5<I>S</I>)-3,4,5-trihydroxy-5-(hydroxymethyl)oxolan-2-yl]methyl dihydrogen phosphate
+[3,4,5-trihydroxy-5-(hydroxymethyl)oxolan-2-yl]methyl dihydrogen phosphate
 
 > <PUBCHEM_IUPAC_NAME>
-[(2R,3S,4R,5S)-3,4,5-trihydroxy-5-(hydroxymethyl)oxolan-2-yl]methyl dihydrogen phosphate
+[3,4,5-trihydroxy-5-(hydroxymethyl)oxolan-2-yl]methyl dihydrogen phosphate
 
 > <PUBCHEM_IUPAC_SYSTEMATIC_NAME>
-[(2R,3S,4R,5S)-5-(hydroxymethyl)-3,4,5-tris(oxidanyl)oxolan-2-yl]methyl dihydrogen phosphate
+[5-(hydroxymethyl)-3,4,5-tris(oxidanyl)oxolan-2-yl]methyl dihydrogen phosphate
 
 > <PUBCHEM_IUPAC_TRADITIONAL_NAME>
-[(2R,3S,4R,5S)-3,4,5-trihydroxy-5-methylol-tetrahydrofuran-2-yl]methyl dihydrogen phosphate
+(3,4,5-trihydroxy-5-methylol-tetrahydrofuran-2-yl)methyl dihydrogen phosphate
 
 > <PUBCHEM_IUPAC_INCHI>
-InChI=1S/C6H13O9P/c7-2-6(10)5(9)4(8)3(15-6)1-14-16(11,12)13/h3-5,7-10H,1-2H2,(H2,11,12,13)/t3-,4-,5-,6+/m1/s1
+InChI=1S/C6H13O9P/c7-2-6(10)5(9)4(8)3(15-6)1-14-16(11,12)13/h3-5,7-10H,1-2H2,(H2,11,12,13)
 
 > <PUBCHEM_IUPAC_INCHIKEY>
-BGWGXPAPYGQALX-KAZBKCHUSA-N
+BGWGXPAPYGQALX-UHFFFAOYSA-N
 
 > <PUBCHEM_XLOGP3_AA>
 -3.9
@@ -122,7 +122,7 @@ C6H13O9P
 C(C1C(C(C(O1)(CO)O)O)O)OP(=O)(O)O
 
 > <PUBCHEM_OPENEYE_ISO_SMILES>
-C([C@@H]1[C@H]([C@H]([C@@](O1)(CO)O)O)O)OP(=O)(O)O
+C(C1C(C(C(O1)(CO)O)O)O)OP(=O)(O)O
 
 > <PUBCHEM_CACTVS_TPSA>
 157
@@ -137,10 +137,10 @@ C([C@@H]1[C@H]([C@H]([C@@](O1)(CO)O)O)O)OP(=O)(O)O
 16
 
 > <PUBCHEM_ATOM_DEF_STEREO_COUNT>
-4
+0
 
 > <PUBCHEM_ATOM_UDEF_STEREO_COUNT>
-0
+4
 
 > <PUBCHEM_BOND_DEF_STEREO_COUNT>
 0
@@ -163,9 +163,9 @@ C([C@@H]1[C@H]([C@H]([C@@](O1)(CO)O)O)O)OP(=O)(O)O
 255
 
 > <PUBCHEM_BONDANNOTATIONS>
-14  15  6
-11  3  5
-12  4  5
-13  5  5
+14  15  3
+11  3  3
+12  4  3
+13  5  3
 
 $$$$
