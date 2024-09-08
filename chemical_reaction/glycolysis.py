@@ -56,6 +56,12 @@ by_reactants_products = [
     (),
     (('ADP',), ('ATP',)),
 ]
+molecules_parts_to_separate = {
+    'fructose-1,6-bisphosphate': [
+        {'bonds': (0, 1, 2, 3, 8, 10, 11, 12, 13, 17), 'atoms': (1, 4, 5, 7, 9, 10, 11, 15, 16, 19)},
+        {'bonds': (4, 5, 6, 7, 9, 14, 15, 16, 18, 19), 'atoms': (2, 3, 6, 8, 12, 13, 14, 17, 18, 20)},
+    ]
+}
 
 class SceneCairo(Scene):
     # Two D Manim Chemistry objects require Cairo renderer
@@ -167,6 +173,15 @@ class Glycolysis(Scene):
                     animations1.append(FadeOut(prev_enzyme, target_position=prev_molecules[0] if len(prev_titles) == 1 else prev_molecule, scale=0.5))
                     is_prev_enzyme_used = True
 
+                if len(prev_molecules) == 1 and (prev_molecule_parts_to_separate := molecules_parts_to_separate.get(prev_title.tex_string)):
+                    animations1.append(FadeOut(prev_molecule))
+
+                    prev_molecules_partial = []
+                    for _ in prev_molecule_parts_to_separate:
+                        prev_molecule_partial = MMoleculeObject.from_mol_file(filename=files_path / (molecules[i][0] + '.sdf')).scale(0.8).next_to(prev_molecule, ORIGIN)
+                        prev_molecules_partial.append(prev_molecule_partial)
+                        animations1.append(FadeIn(prev_molecule_partial))
+
                 animations2 = []
                 for j, (next_title, next_molecule) in enumerate(zip(next_titles, next_molecules)):
                     if len(prev_titles) == 1 and j != 0:
@@ -177,14 +192,15 @@ class Glycolysis(Scene):
                         prev_molecule = prev_molecules[0] if len(prev_titles) == 1 else prev_molecules[j]
 
                     print('Matching molecules | Reactant: [yellow]{}[/yellow], Product: [yellow]{}[/yellow]'.format(prev_title.tex_string, next_title.tex_string))
-                    key_map = match_molecules(prev_molecule, next_molecule, verbose=verbose)
 
-                    animations2.extend([
-                        TransformMatchingTex(prev_title, next_title),
-                        TransformMatchingShapesCustom(prev_molecule, next_molecule, key_map=key_map)
-                    ])
+                    if len(prev_molecules) == 1:
+                        key_map = match_molecules(prev_molecules_partial[j], next_molecule, limited_part=prev_molecule_parts_to_separate[j], verbose=verbose)
+                        animations2.append(TransformMatchingShapesCustom(prev_molecules_partial[j], next_molecule, fade_transform_mismatches=True, key_map=key_map))
+                    else:
+                        key_map = match_molecules(prev_molecule, next_molecule, limited_part=None, verbose=verbose)
+                        animations2.append(TransformMatchingShapesCustom(prev_molecule, next_molecule, key_map=key_map))
+                    animations2.append(TransformMatchingTex(prev_title, next_title))
 
-            animations2 = [*animations2]
             if len(byreaction) > 0 and len(byreaction[0]) != 0:
                 animations2.append(TransformMatchingShapes(byreactants_group, byproducts_group, transform_mismatches=True))
 
@@ -225,8 +241,10 @@ def match_atoms(atoms1, atoms2, atom1_idx, atom2_idx, atoms1_counters, atoms2_co
     atom1 = atoms1[atom1_idx]
     atom2 = atoms2[atom2_idx]
     
-    del atom1_neighbors['H']
-    del atom2_neighbors['H']
+    if atom1_neighbors.get('H'):
+        del atom1_neighbors['H']
+    if atom2_neighbors.get('H'):
+        del atom2_neighbors['H']
     
     matching_map = np.zeros([len(atom1.bond_to), len(atom2.bond_to)])
     
@@ -249,7 +267,7 @@ def match_atoms(atoms1, atoms2, atom1_idx, atom2_idx, atoms1_counters, atoms2_co
     return True
 
 
-def match_bonds(atoms1, atoms2, bonds1, bonds2, bond1_idx, bond2_idx, atoms1_counters, atoms2_counters, matching_level, removed_atoms):
+def match_bonds(atoms1, atoms2, bonds1, bonds2, bond1_idx, bond2_idx, atoms1_counters, atoms2_counters, matching_level):
     bond1 = bonds1[bond1_idx]
     bond2 = bonds2[bond2_idx]
 
@@ -274,11 +292,15 @@ def match_bonds(atoms1, atoms2, bonds1, bonds2, bond1_idx, bond2_idx, atoms1_cou
         #         del bonds1_atom2_neighbors[removed_atom]
         #     if removed_atom in bonds1_atom2_neighbors:
         #         del bonds1_atom2_neighbors[removed_atom]
-                
-        del bonds1_atom1_neighbors['H']
-        del bonds1_atom2_neighbors['H']
-        del bonds2_atom1_neighbors['H']
-        del bonds2_atom2_neighbors['H']
+        
+        if bonds1_atom1_neighbors.get('H'):
+            del bonds1_atom1_neighbors['H']
+        if bonds1_atom2_neighbors.get('H'):
+            del bonds1_atom2_neighbors['H']
+        if bonds2_atom1_neighbors.get('H'):
+            del bonds2_atom1_neighbors['H']
+        if bonds2_atom2_neighbors.get('H'):
+            del bonds2_atom2_neighbors['H']
                 
     def is_neighbor_matched(atom1, atom2, atoms1_counters, atoms2_counters, depth):
         matching_map = np.zeros((len(atom1.bond_to), len(atom2.bond_to)))
@@ -338,7 +360,7 @@ def match_bonds(atoms1, atoms2, bonds1, bonds2, bond1_idx, bond2_idx, atoms1_cou
         return False
 
 
-def match_molecules(molecule1, molecule2, matching_level=10, verbose=False):
+def match_molecules(molecule1, molecule2, limited_part=None, matching_level=10, verbose=False):
     '''
     # Guideline of the bond matching 
     ### 1: One atom forming a bond is same as an atom forming a bond in another molecule
@@ -353,24 +375,26 @@ def match_molecules(molecule1, molecule2, matching_level=10, verbose=False):
     bonds2 = molecule2.get_bonds()
     
     atoms1_dict = defaultdict(list)
-    atoms1_counters = defaultdict(list)
+    atoms1_counters = defaultdict(dict)
     atoms2_dict = defaultdict(list)
-    atoms2_counters = defaultdict(list)
+    atoms2_counters = defaultdict(dict)
 
     for i in range(len(atoms1)):
+        if limited_part is not None and i+1 not in limited_part['atoms']:
+            continue
         atoms1_dict[atoms1[i+1].element].append(i+1)
         atoms1_counters[i+1] = Counter(atoms1[i+1].bond_to.values())
     for j in range(len(atoms2)):
         atoms2_dict[atoms2[j+1].element].append(j+1)
         atoms2_counters[j+1] = Counter(atoms2[j+1].bond_to.values())
 
-    removed_atoms = set(atoms1_dict.keys()) ^ set(atoms2_dict.keys())
+    # removed_atoms = set(atoms1_dict.keys()) ^ set(atoms2_dict.keys())
     atoms1_undefined_dict = deepcopy(atoms1_dict)
     atoms2_undefined_dict = deepcopy(atoms2_dict)
     # print(atoms1_undefined_dict)
     # print(atoms2_undefined_dict)
 
-    bonds1_idxs = list(range(len(bonds1)))
+    bonds1_idxs = list(range(len(bonds1)) if limited_part is None else limited_part['bonds'])
     bonds2_idxs = list(range(len(bonds2)))
     matched_bonds = list()
     matched_atoms = list()
@@ -388,7 +412,7 @@ def match_molecules(molecule1, molecule2, matching_level=10, verbose=False):
 
             same_bonds_idxs = []
             for bond2_idx in bonds2_idxs_temp:
-                is_matched = match_bonds(atoms1, atoms2, bonds1, bonds2, bond1_idx, bond2_idx, atoms1_counters, atoms2_counters, matching_level, removed_atoms)
+                is_matched = match_bonds(atoms1, atoms2, bonds1, bonds2, bond1_idx, bond2_idx, atoms1_counters, atoms2_counters, matching_level)
 
                 if is_matched:
                     same_bonds_idxs.append(bond2_idx)
@@ -458,28 +482,29 @@ def match_molecules(molecule1, molecule2, matching_level=10, verbose=False):
             matching_level -= 1
     
     # Match the undefined atoms (H atoms)
-    for atom1_matched_idx, atom2_matched_idx in matched_atoms[:]:
-        if not ('H' in set(atoms1[atom1_matched_idx].bond_to.values()) and 'H' in set(atoms2[atom2_matched_idx].bond_to.values())):
-            continue
+    if len(atoms1_undefined_dict['H']) != 0 and len(atoms2_undefined_dict['H']) != 0:
+        for atom1_matched_idx, atom2_matched_idx in matched_atoms[:]:
+            if not ('H' in set(atoms1[atom1_matched_idx].bond_to.values()) and 'H' in set(atoms2[atom2_matched_idx].bond_to.values())):
+                continue
 
-        distances_atoms1 = [distance_nd(atoms1[atom1_idx].coords, atoms1[atom1_matched_idx].coords) for atom1_idx in atoms1_undefined_dict['H']]
-        distances_atoms2 = [distance_nd(atoms2[atom2_idx].coords, atoms2[atom2_matched_idx].coords) for atom2_idx in atoms2_undefined_dict['H']]
-        
-        min_disatance_atom1_idx = np.argmin(distances_atoms1)
-        min_disatance_atom2_idx = np.argmin(distances_atoms2)
-        
-        atom1_matched_idx = atoms1_undefined_dict['H'][min_disatance_atom1_idx]
-        atom2_matched_idx = atoms2_undefined_dict['H'][min_disatance_atom2_idx]
-        atoms1_undefined_dict['H'].remove(atom1_matched_idx)
-        atoms2_undefined_dict['H'].remove(atom2_matched_idx)
-        matched_atoms.append((atom1_matched_idx, atom2_matched_idx))
+            distances_atoms1 = [distance_nd(atoms1[atom1_idx].coords, atoms1[atom1_matched_idx].coords) for atom1_idx in atoms1_undefined_dict['H']]
+            distances_atoms2 = [distance_nd(atoms2[atom2_idx].coords, atoms2[atom2_matched_idx].coords) for atom2_idx in atoms2_undefined_dict['H']]
 
-        if verbose:
-            print('H atoms matched | atom1: {}, atom2: {}'.format(atom1_matched_idx, atom2_matched_idx))
+            min_disatance_atom1_idx = np.argmin(distances_atoms1)
+            min_disatance_atom2_idx = np.argmin(distances_atoms2)
             
-        if atoms1_undefined_dict['H'] == [] or atoms2_undefined_dict['H'] == []:
-            break
+            atom1_matched_idx = atoms1_undefined_dict['H'][min_disatance_atom1_idx]
+            atom2_matched_idx = atoms2_undefined_dict['H'][min_disatance_atom2_idx]
+            atoms1_undefined_dict['H'].remove(atom1_matched_idx)
+            atoms2_undefined_dict['H'].remove(atom2_matched_idx)
+            matched_atoms.append((atom1_matched_idx, atom2_matched_idx))
+
+            if verbose:
+                print('H atoms matched | atom1: {}, atom2: {}'.format(atom1_matched_idx, atom2_matched_idx))
                 
+            if atoms1_undefined_dict['H'] == [] or atoms2_undefined_dict['H'] == []:
+                break
+                    
     # print(atoms1_undefined_dict)
     # print(atoms2_undefined_dict)
     # print(matched_atoms)
