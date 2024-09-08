@@ -1,3 +1,4 @@
+# Main Command: manim chemical_reaction/glycolysis.py Glycolysis
 from manim import Scene, config
 from manim import *
 from manim.animation.transform_matching_parts import TransformMatchingAbstractBase 
@@ -44,22 +45,22 @@ enzymes = [
 substrings_to_isolate = ['glucose', 'fructose', 'phosphate', 'phospho', 'glycer', 'pyruvate']
 
 
-# class SceneCairo(Scene):
-#     # Two D Manim Chemistry objects require Cairo renderer
-#     config.renderer = "cairo"
+class SceneCairo(Scene):
+    # Two D Manim Chemistry objects require Cairo renderer
+    config.renderer = "cairo"
 
 
-# for i, molecule in enumerate(molecules):
-#     class_name = str(i+1) + '_' + ''.join(map(lambda x: x.capitalize().replace(',', '').replace(' ', ''), molecule.split('-')))
+for i, molecule in enumerate(molecules):
+    class_name = str(i+1) + '_' + ''.join(map(lambda x: x.capitalize().replace(',', '').replace(' ', ''), molecule[-1].split('-')))
 
-#     def construct(self):    
-#         morphine = MMoleculeObject.from_mol_file(filename=files_path / (molecule + '.sdf'), add_atoms_numbering=True, add_bonds_numbering=True)
-#         self.add(morphine)
+    def construct(self):    
+        morphine = MMoleculeObject.from_mol_file(filename=files_path / (self.molecule + '.sdf'), add_atoms_numbering=True, add_bonds_numbering=True)
+        self.add(morphine)
 
-#     globals()[class_name] = type(class_name, (SceneCairo,), {'construct': construct})
+    globals()[class_name] = type(class_name, (SceneCairo,), {'construct': construct})
+    globals()[class_name].molecule = molecule[-1]
 
 
-# 2D Molecule example
 class Glycolysis(Scene):
     config.renderer = "cairo"
     def construct(self):
@@ -110,7 +111,7 @@ class Glycolysis(Scene):
                     is_prev_enzyme_used = True
 
                 animations2 = []
-                key_map = match_molecules(prev_molecules[0], next_molecules[0])
+                key_map = match_molecules(prev_molecules[0], next_molecules[0], prev_titles[0].tex_string, next_titles[0].tex_string)
                 animations2.extend([
                     TransformMatchingTex(prev_titles[0], next_titles[0]),
                     TransformMatchingTex(prev_purural_sign, next_purural_sign),
@@ -146,7 +147,7 @@ class Glycolysis(Scene):
                         prev_title = prev_titles[0] if len(prev_titles) == 1 else prev_titles[j]
                         prev_molecule = prev_molecules[0] if len(prev_titles) == 1 else prev_molecules[j]
 
-                    key_map = match_molecules(prev_molecule, next_molecule)
+                    key_map = match_molecules(prev_molecule, next_molecule, prev_title.tex_string, next_title.tex_string)
                     animations2.extend([
                         TransformMatchingTex(prev_title, next_title),
                         TransformMatchingShapesCustom(prev_molecule, next_molecule, key_map=key_map)
@@ -179,14 +180,14 @@ class Glycolysis(Scene):
     #     super().render(preview=True)
 
 
-def match_atoms(atoms1, atoms2, atom1_idx, atom2_idx, atoms1_counters, atoms2_counters, depth=1, verbose=False):
+def match_atoms(atoms1, atoms2, atom1_idx, atom2_idx, atoms1_counters, atoms2_counters, depth=1):
     atom1_neighbors = atoms1_counters[atom1_idx]
     atom2_neighbors = atoms2_counters[atom2_idx]
     atom1 = atoms1[atom1_idx]
     atom2 = atoms2[atom2_idx]
     
-    # if verbose:
-    #     print(atom1.bond_to, atom2.bond_to)
+    del atom1_neighbors['H']
+    del atom2_neighbors['H']
     
     matching_map = np.zeros([len(atom1.bond_to), len(atom2.bond_to)])
     
@@ -197,9 +198,6 @@ def match_atoms(atoms1, atoms2, atom1_idx, atom2_idx, atoms1_counters, atoms2_co
         for j, (atom2_neighbor_idx, element2) in enumerate(atom2.bond_to.items()):
             if element1 == element2 and match_atoms(atoms1, atoms2, atom1_neighbor_idx, atom2_neighbor_idx, atoms1_counters, atoms2_counters, depth-1):
                     matching_map[i, j] = 1
-    # if verbose:
-    #     print(matching_map)
-    #     breakpoint()
 
     # TODO: Prevent the same atom to be matched with multiple atoms
     for i in range(len(atom1.bond_to)):
@@ -220,6 +218,11 @@ def match_bonds(atoms1, atoms2, bonds1, bonds2, bond1_idx, bond2_idx, atoms1_cou
     bonds1_atom2 = bonds1[bond1_idx].to_atom
     bonds2_atom1 = bonds2[bond2_idx].from_atom
     bonds2_atom2 = bonds2[bond2_idx].to_atom
+    
+    bonds1_atom1_element = bonds1_atom1.element[0]
+    bonds1_atom2_element = bonds1_atom2.element[0]
+    bonds2_atom1_element = bonds2_atom1.element[0]
+    bonds2_atom2_element = bonds2_atom2.element[0]
 
     if matching_level == 2 or matching_level >= 4:
         bonds1_atom1_neighbors = atoms1_counters[bond1.from_atom.index]
@@ -227,17 +230,22 @@ def match_bonds(atoms1, atoms2, bonds1, bonds2, bond1_idx, bond2_idx, atoms1_cou
         bonds2_atom1_neighbors = atoms2_counters[bond2.from_atom.index]
         bonds2_atom2_neighbors = atoms2_counters[bond2.to_atom.index]
         
-        for removed_atom in removed_atoms:
-            if removed_atom in bonds1_atom1_neighbors:
-                del bonds1_atom2_neighbors[removed_atom]
-            if removed_atom in bonds1_atom2_neighbors:
-                del bonds1_atom2_neighbors[removed_atom]
+        # for removed_atom in removed_atoms:
+        #     if removed_atom in bonds1_atom1_neighbors:
+        #         del bonds1_atom2_neighbors[removed_atom]
+        #     if removed_atom in bonds1_atom2_neighbors:
+        #         del bonds1_atom2_neighbors[removed_atom]
                 
-    def is_neighbor_matched(atom1, atom2, atoms1_counters, atoms2_counters, matching_level, verbose=False):
+        del bonds1_atom1_neighbors['H']
+        del bonds1_atom2_neighbors['H']
+        del bonds2_atom1_neighbors['H']
+        del bonds2_atom2_neighbors['H']
+                
+    def is_neighbor_matched(atom1, atom2, atoms1_counters, atoms2_counters, depth):
         matching_map = np.zeros((len(atom1.bond_to), len(atom2.bond_to)))
         for i, atom1_neighbor_idx in enumerate(atom1.bond_to.keys()):
             for j, atom2_neighbor_idx in enumerate(atom2.bond_to.keys()):
-                if match_atoms(atoms1, atoms2, atom1_neighbor_idx, atom2_neighbor_idx, atoms1_counters, atoms2_counters, matching_level, verbose):
+                if match_atoms(atoms1, atoms2, atom1_neighbor_idx, atom2_neighbor_idx, atoms1_counters, atoms2_counters, depth):
                     matching_map[i, j] = 1
         for i in range(len(atom1.bond_to)):
             if not np.any(matching_map[i]):
@@ -248,45 +256,50 @@ def match_bonds(atoms1, atoms2, bonds1, bonds2, bond1_idx, bond2_idx, atoms1_cou
         return True
     
     if matching_level == 1:
-        if bonds1_atom1.element == bonds2_atom1.element or bonds1_atom1.element == bonds2_atom2.element:
+        if bonds1_atom1_element == bonds2_atom1_element or bonds1_atom1_element == bonds2_atom2_element:
             return True
-        if bonds1_atom2.element == bonds2_atom1.element or bonds1_atom2.element == bonds2_atom2.element:
+        if bonds1_atom2_element == bonds2_atom1_element or bonds1_atom2_element == bonds2_atom2_element:
             return True
+        return False
     elif matching_level == 2:
-        if (bonds1_atom1.element == bonds2_atom1.element and bonds1_atom1_neighbors == bonds2_atom1_neighbors) or \
-            (bonds1_atom1.element == bonds2_atom2.element and bonds1_atom1_neighbors == bonds2_atom2_neighbors):
+        if (bonds1_atom1_element == bonds2_atom1_element and bonds1_atom1_neighbors == bonds2_atom1_neighbors) or \
+            (bonds1_atom1_element == bonds2_atom2_element and bonds1_atom1_neighbors == bonds2_atom2_neighbors):
             return True
-        if (bonds1_atom2.element == bonds2_atom1.element and bonds1_atom2_neighbors == bonds2_atom1_neighbors) or \
-            (bonds1_atom2.element == bonds2_atom2.element and bonds1_atom2_neighbors == bonds2_atom2_neighbors):
+        if (bonds1_atom2_element == bonds2_atom1_element and bonds1_atom2_neighbors == bonds2_atom1_neighbors) or \
+            (bonds1_atom2_element == bonds2_atom2_element and bonds1_atom2_neighbors == bonds2_atom2_neighbors):
             return True
+        return False
     elif matching_level == 3:
-        if (bonds1_atom1.element == bonds2_atom1.element and bonds1_atom2.element == bonds2_atom2.element) or \
-            (bonds1_atom1.element == bonds2_atom2.element and bonds1_atom2.element == bonds2_atom1.element):
+        if (
+            (bonds1_atom1_element == bonds2_atom1_element and bonds1_atom2_element == bonds2_atom2_element) or \
+            (bonds1_atom1_element == bonds2_atom2_element and bonds1_atom2_element == bonds2_atom1_element)
+        ) and bond1.type == bond2.type:
             return True
+        return False
     elif matching_level == 4:
-        if (bonds1_atom1.element == bonds2_atom1.element and bonds1_atom2.element == bonds2_atom2.element) and \
-            (bonds1_atom1_neighbors == bonds2_atom1_neighbors and bonds1_atom2_neighbors == bonds2_atom2_neighbors):
+        if bonds1_atom1_element == bonds2_atom1_element and bonds1_atom2_element == bonds2_atom2_element and bond1.type == bond2.type and \
+            bonds1_atom1_neighbors == bonds2_atom1_neighbors and bonds1_atom2_neighbors == bonds2_atom2_neighbors:
             return True
-        if (bonds1_atom1.element == bonds2_atom2.element and bonds1_atom2.element == bonds2_atom1.element) and \
-            (bonds1_atom1_neighbors == bonds2_atom2_neighbors and bonds1_atom2_neighbors == bonds2_atom1_neighbors):
+        if bonds1_atom1_element == bonds2_atom2_element and bonds1_atom2_element == bonds2_atom1_element and bond1.type == bond2.type and \
+            bonds1_atom1_neighbors == bonds2_atom2_neighbors and bonds1_atom2_neighbors == bonds2_atom1_neighbors:
             return True
+        return False
     elif matching_level >= 5:
-        if (bonds1_atom1.element == bonds2_atom1.element and bonds1_atom2.element == bonds2_atom2.element) and \
+        if (bonds1_atom1_element == bonds2_atom1_element and bonds1_atom2_element == bonds2_atom2_element) and bond1.type == bond2.type and \
             (bonds1_atom1_neighbors == bonds2_atom1_neighbors and bonds1_atom2_neighbors == bonds2_atom2_neighbors) and \
-            is_neighbor_matched(bonds1_atom1, bonds2_atom1, atoms1_counters, atoms2_counters, matching_level-4) and \
-            is_neighbor_matched(bonds1_atom2, bonds2_atom2, atoms1_counters, atoms2_counters, matching_level-4):
+            is_neighbor_matched(bonds1_atom1, bonds2_atom1, atoms1_counters, atoms2_counters, depth=matching_level-4) and \
+            is_neighbor_matched(bonds1_atom2, bonds2_atom2, atoms1_counters, atoms2_counters, depth=matching_level-4):
                 return True
 
-        if (bonds1_atom1.element == bonds2_atom2.element and bonds1_atom2.element == bonds2_atom1.element) and \
+        if (bonds1_atom1_element == bonds2_atom2_element and bonds1_atom2_element == bonds2_atom1_element) and bond1.type == bond2.type and \
             (bonds1_atom1_neighbors == bonds2_atom2_neighbors and bonds1_atom2_neighbors == bonds2_atom1_neighbors) and \
-            is_neighbor_matched(bonds1_atom1, bonds2_atom2, atoms1_counters, atoms2_counters, matching_level-4) and \
-            is_neighbor_matched(bonds1_atom2, bonds2_atom1, atoms1_counters, atoms2_counters, matching_level-4):
+            is_neighbor_matched(bonds1_atom1, bonds2_atom2, atoms1_counters, atoms2_counters, depth=matching_level-4) and \
+            is_neighbor_matched(bonds1_atom2, bonds2_atom1, atoms1_counters, atoms2_counters, depth=matching_level-4):
                 return True
-
         return False
 
 
-def match_molecules(molecule1, molecule2, matching_level=10, verbose=False):
+def match_molecules(molecule1, molecule2, molecule1_name, molecule2_name, matching_level=10, verbose=True):
     '''
     # Guideline of the bond matching 
     ### 1: One atom forming a bond is same as an atom forming a bond in another molecule
@@ -295,6 +308,8 @@ def match_molecules(molecule1, molecule2, matching_level=10, verbose=False):
     ### 4: 3 + Whose neibor atoms are also matched
     ### 5: 4 + Whose neibor's neibor atoms are also matched
     '''
+    if verbose and molecule1_name and molecule2_name:
+        print('Matching molecules | Reactant: [yellow]{}[/yellow], Product: [yellow]{}[/yellow]'.format(molecule1_name, molecule2_name))
 
     atoms1, _  = molecule1.get_atoms()
     bonds1 = molecule1.get_bonds()
@@ -341,6 +356,15 @@ def match_molecules(molecule1, molecule2, matching_level=10, verbose=False):
 
                 if is_matched:
                     same_bonds_idxs.append(bond2_idx)
+
+            if len(same_bonds_idxs) > 1:
+                if len(matched_atoms) > 1:
+                    # distances_from_matched_atom = [distance_nd(atoms1[matched_atoms[0][0]].coords, bonds1[bond1_idx].from_atom.coords) - distance_nd(atoms2[matched_atoms[0][1]].coords, bonds2[same_bonds_idx].from_atom.coords) for same_bonds_idx in same_bonds_idxs]
+                    cos_similarities = [cos_similarity(np.array(atoms1[matched_atoms[0][0]].coords)-np.array(bonds1[bond1_idx].from_atom.coords), np.array(atoms2[matched_atoms[0][1]].coords)-np.array(bonds2[same_bonds_idx].from_atom.coords)) for same_bonds_idx in same_bonds_idxs]
+                    # cos_similarities_passed = [1 for cos_similarity in cos_similarities if cos_similarity > 0.9999] # len(cos_similarities_passed) == 1
+                    if max(cos_similarities) > 0.9999: # min(distances_from_matched_atom) < 0.0001 and cos_similarities_passed
+                        idx_min_distance = np.argmax(cos_similarities)
+                        same_bonds_idxs = [same_bonds_idxs[idx_min_distance]]
 
             if len(same_bonds_idxs) == 1:
                 progress_flag = True
@@ -550,3 +574,24 @@ def distance_nd(vector1, vector2):
         raise ValueError("Both vectors must have the same number of dimensions.")
     
     return math.sqrt(sum((x2 - x1) ** 2 for x1, x2 in zip(vector1, vector2)))
+
+
+def cos_similarity(vector1, vector2):
+    """
+    Calculate the cosine similarity between two N-dimensional vectors.
+
+    Args:
+    vector1 (tuple or list): An iterable of floats representing the first vector.
+    vector2 (tuple or list): An iterable of floats representing the second vector.
+
+    Returns:
+    float: The cosine similarity between vector1 and vector2.
+    """
+    if len(vector1) != len(vector2):
+        raise ValueError("Both vectors must have the same number of dimensions.")
+    
+    dot_product = sum(x1 * x2 for x1, x2 in zip(vector1, vector2))
+    magnitude1 = math.sqrt(sum(x ** 2 for x in vector1))
+    magnitude2 = math.sqrt(sum(x ** 2 for x in vector2))
+    
+    return dot_product / (magnitude1 * magnitude2)
