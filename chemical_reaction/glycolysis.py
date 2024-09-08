@@ -1,13 +1,9 @@
-from manim import Scene, ThreeDScene, config
+from manim import Scene, config
 from manim import *
 from manim.animation.transform_matching_parts import TransformMatchingAbstractBase 
-from manim_chemistry import (
-    MMoleculeObject,
-    GraphMolecule,
-)
+from manim_chemistry import MMoleculeObject
 from manim.mobject.opengl.opengl_mobject import OpenGLGroup, OpenGLMobject
 from manim.mobject.opengl.opengl_vectorized_mobject import OpenGLVGroup, OpenGLVMobject
-from manim.utils.file_ops import open_media_file
 
 from pathlib import Path
 from collections import defaultdict, Counter
@@ -33,6 +29,20 @@ molecules = [
     'phosphoenolpyruvate',
     'pyruvate',
 ]
+enzymes = [
+    'hexokinase',
+    'phosphoglucose isomerase',
+    'phosphofructokinase',
+    'aldolase',
+    'triose phosphate isomerase',
+    'glyceraldehyde-3-phosphate dehydrogenase',
+    'phosphoglycerate kinase',
+    'phosphoglyceromutase',
+    'enolase',
+    'pyruvate kinase',
+]
+substrings_to_isolate = ['glucose', 'phosphate', 'fructose', 'phospho', 'glycer', 'glycerate', 'pyruvate']
+
 
 class SceneCairo(Scene):
     # Two D Manim Chemistry objects require Cairo renderer
@@ -52,29 +62,29 @@ class SceneCairo(Scene):
 # 2D Molecule example
 class Glycolysis(SceneCairo):
     def construct(self):    
-        # from manim_chemistry.utils import mol_parser
-        # atoms1, bonds1 = mol_parser(files_path / (molecules[0] + '.sdf'))
-        # atoms2, bonds2 = mol_parser(files_path / (molecules[1] + '.sdf'))
-        
-        substrings_to_isolate = ['glucose', 'phosphate', 'fructose', 'phospho', 'glycer', 'glycerate', 'pyruvate']
+        next_title = Tex(molecules[0], font_size=64, substrings_to_isolate=substrings_to_isolate).to_edge(UP)
+        next_molecule = MMoleculeObject.from_mol_file(filename=files_path /(molecules[0] + '.sdf')).scale(0.8)
 
-        initial_title = Tex(molecules[0], font_size=64, substrings_to_isolate=substrings_to_isolate).to_edge(UP)
-        initial_molecule = MMoleculeObject.from_mol_file(filename=files_path /(molecules[0] + '.sdf')).scale(0.8)
+        self.play(Write(next_title), Create(next_molecule), run_time=2)
 
-        self.play(Write(initial_title), Create(initial_molecule), run_time=2)
-        self.wait(duration=2)
-        prev_title = initial_title
-        prev_moleucule = initial_molecule
+        for i, (title, enzyme) in enumerate(zip(molecules[1:], enzymes)):
+            next_enzyme = Tex(enzyme, font_size=48).to_edge(DOWN)
+            self.play(Write(next_enzyme), run_time=1)
 
-        for title in molecules[1:]:
+            prev_enzyme = next_enzyme
+            prev_title = next_title
+            prev_moleucule = next_molecule
             next_title = Tex(title, font_size=64, substrings_to_isolate=substrings_to_isolate).to_edge(UP)
             next_molecule = MMoleculeObject.from_mol_file(filename=files_path / (title + '.sdf')).scale(0.8)
-            key_map = match_molecules(prev_moleucule, next_molecule)
 
-            self.play(TransformMatchingTex(prev_title, next_title), TransformMatchingShapesCustom(prev_moleucule, next_molecule, key_map=key_map), run_time=2)
-            self.wait(duration=2)
-            prev_moleucule = next_molecule
-            prev_title = next_title
+            key_map = match_molecules(prev_moleucule, next_molecule)
+            self.wait(duration=0.5)
+            self.play(
+                TransformMatchingTex(prev_title, next_title), 
+                TransformMatchingShapesCustom(prev_moleucule, next_molecule, key_map=key_map), 
+                FadeOut(prev_enzyme, target_position=next_molecule, scale=0.5),
+                run_time=2
+            )
 
     # def render(self):
     #     super().render(preview=True)
@@ -451,11 +461,3 @@ def distance_nd(vector1, vector2):
         raise ValueError("Both vectors must have the same number of dimensions.")
     
     return math.sqrt(sum((x2 - x1) ** 2 for x1, x2 in zip(vector1, vector2)))
-
-
-# # 2D Graph Molecule example
-# class DrawGraphMorphine(Scene):
-#     # Two D Manim Chemistry objects require Cairo renderer
-#     config.renderer = "cairo"
-#     def construct(self):
-#         self.add(GraphMolecule.build_from_mol(mol_file=files_path / "Structure2D_COMPOUND_CID_5958.sdf"))
