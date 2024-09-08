@@ -17,17 +17,17 @@ script_path = Path(__file__).absolute().parent.parent
 files_path = script_path / "glycolysis"
 font = 'Comic Sans MS'
 molecules = [
-    'glucose',
-    'glucose-6-phosphate',
-    'fructose-6-phosphate',
-    'fructose-1,6-bisphosphate',
-    'dihydroxyacetone phosphate',
-    'glyceraldehyde-3-phosphate',
-    '1,3-bisphosphoglycerate',
-    '3-phosphoglycerate',
-    '2-phosphoglycerate',
-    'phosphoenolpyruvate',
-    'pyruvate',
+    ('glucose',),
+    ('glucose-6-phosphate',),
+    ('fructose-6-phosphate',),
+    ('fructose-1,6-bisphosphate',),
+    ('glyceraldehyde-3-phosphate', 'dihydroxyacetone phosphate'),
+    ('glyceraldehyde-3-phosphate', 'glyceraldehyde-3-phosphate'),
+    ('1,3-bisphosphoglycerate',),
+    ('3-phosphoglycerate',),
+    ('2-phosphoglycerate',),
+    ('phosphoenolpyruvate',),
+    ('pyruvate',),
 ]
 enzymes = [
     'hexokinase',
@@ -41,12 +41,12 @@ enzymes = [
     'enolase',
     'pyruvate kinase',
 ]
-substrings_to_isolate = ['glucose', 'phosphate', 'fructose', 'phospho', 'glycer', 'glycerate', 'pyruvate']
+substrings_to_isolate = ['glucose', 'fructose', 'phosphate', 'phospho', 'glycer', 'pyruvate']
 
 
-class SceneCairo(Scene):
-    # Two D Manim Chemistry objects require Cairo renderer
-    config.renderer = "cairo"
+# class SceneCairo(Scene):
+#     # Two D Manim Chemistry objects require Cairo renderer
+#     config.renderer = "cairo"
 
 
 # for i, molecule in enumerate(molecules):
@@ -60,31 +60,120 @@ class SceneCairo(Scene):
 
 
 # 2D Molecule example
-class Glycolysis(SceneCairo):
-    def construct(self):    
-        next_title = Tex(molecules[0], font_size=64, substrings_to_isolate=substrings_to_isolate).to_edge(UP)
-        next_molecule = MMoleculeObject.from_mol_file(filename=files_path /(molecules[0] + '.sdf')).scale(0.8)
+class Glycolysis(Scene):
+    config.renderer = "cairo"
+    def construct(self):
+        if len(molecules[0]) == 1:
+            position_title = [UP]
+            position_molecule = [ORIGIN]
+            font_size = 64
+        elif len(molecules[0]) == 2:
+            position_title = [UL, UR]
+            position_molecule = [LEFT, RIGHT]
+            font_size = 48
+            
+        n_molecules = 1
+        animations = []
+        next_titles = []
+        next_molecules = []
+        for i, (title, molecule) in enumerate(zip(molecules[0], molecules[0])):
+            title = Tex(title, font_size=font_size, substrings_to_isolate=substrings_to_isolate).to_edge(position_title[i])
+            next_purural_sign = Tex('x{}'.format(n_molecules) if n_molecules > 1 else '', font_size=48).next_to(title, RIGHT)
+            molecule = MMoleculeObject.from_mol_file(filename=files_path / (molecule + '.sdf')).scale(0.8).to_edge(position_molecule[i])
+            next_titles.append(title)
+            next_molecules.append(molecule)
+            animations.extend([Write(title), Write(next_purural_sign), Create(molecule)])
 
-        self.play(Write(next_title), Create(next_molecule), run_time=2)
+        self.play(*animations, run_time=1)
+        self.wait(duration=0.5)
 
         for i, (title, enzyme) in enumerate(zip(molecules[1:], enzymes)):
             next_enzyme = Tex(enzyme, font_size=48).to_edge(DOWN)
             self.play(Write(next_enzyme), run_time=1)
 
             prev_enzyme = next_enzyme
-            prev_title = next_title
-            prev_moleucule = next_molecule
-            next_title = Tex(title, font_size=64, substrings_to_isolate=substrings_to_isolate).to_edge(UP)
-            next_molecule = MMoleculeObject.from_mol_file(filename=files_path / (title + '.sdf')).scale(0.8)
+            prev_titles = next_titles
+            prev_purural_sign = next_purural_sign
+            prev_molecules = next_molecules
 
-            key_map = match_molecules(prev_moleucule, next_molecule)
+            if len(title) == 1:
+                next_titles = [Tex(title[0], font_size=64, substrings_to_isolate=substrings_to_isolate).to_edge(UP)]
+                next_purural_sign = Tex('x{}'.format(n_molecules) if n_molecules > 1 else '', font_size=48).next_to(next_titles[0], RIGHT)
+                next_molecules = [MMoleculeObject.from_mol_file(filename=files_path / (title[0] + '.sdf')).scale(0.8)]
+
+                animations1 = []
+                is_prev_enzyme_used = False
+                for j, (prev_title, prev_molecule) in enumerate(zip(prev_titles, prev_molecules)):
+                    if len(prev_enzyme) == 1 and j != 0 and is_prev_enzyme_used:
+                        prev_enzyme = Tex(enzymes[i], font_size=48).to_edge(DOWN)
+                    animations1.append(FadeOut(prev_enzyme, target_position=prev_molecules[0] if len(prev_titles) == 1 else prev_molecule, scale=0.5))
+                    is_prev_enzyme_used = True
+
+                animations2 = []
+                key_map = match_molecules(prev_molecules[0], next_molecules[0])
+                animations2.extend([
+                    TransformMatchingTex(prev_titles[0], next_titles[0]),
+                    TransformMatchingTex(prev_purural_sign, next_purural_sign),
+                    TransformMatchingShapesCustom(prev_molecules[0], next_molecules[0], key_map=key_map)
+                ])
+
+            elif len(title) == 2:
+                next_titles = [
+                    Tex(title[0], font_size=48, substrings_to_isolate=substrings_to_isolate).to_edge(UL),
+                    Tex(title[1], font_size=48, substrings_to_isolate=substrings_to_isolate).to_edge(UR),
+                ]
+                next_molecules = [
+                    MMoleculeObject.from_mol_file(filename=files_path / (title[0] + '.sdf')).scale(0.8).to_edge(LEFT),
+                    MMoleculeObject.from_mol_file(filename=files_path / (title[1] + '.sdf')).scale(0.8).to_edge(RIGHT),
+                ]
+
+                animations1 = []
+                is_prev_enzyme_used = False
+                for j, (prev_title, next_title, prev_molecule) in enumerate(zip(prev_titles, next_titles, prev_molecules)):
+                    if prev_title.tex_string == next_title.tex_string:
+                        continue
+                    if len(prev_enzyme) == 1 and j != 0 and is_prev_enzyme_used:
+                        prev_enzyme = Tex(enzymes[i], font_size=48).to_edge(DOWN)
+                    animations1.append(FadeOut(prev_enzyme, target_position=prev_molecules[0] if len(prev_titles) == 1 else prev_molecule, scale=0.5))
+                    is_prev_enzyme_used = True
+
+                animations2 = []
+                for j, (next_title, next_molecule) in enumerate(zip(next_titles, next_molecules)):
+                    if len(prev_titles) == 1 and j != 0:
+                        prev_title = Tex(molecules[i][0], font_size=64, substrings_to_isolate=substrings_to_isolate).next_to(prev_titles[0], ORIGIN)
+                        prev_molecule = MMoleculeObject.from_mol_file(filename=files_path / (molecules[i][0] + '.sdf')).scale(0.8).next_to(prev_molecule, ORIGIN)
+                    else:
+                        prev_title = prev_titles[0] if len(prev_titles) == 1 else prev_titles[j]
+                        prev_molecule = prev_molecules[0] if len(prev_titles) == 1 else prev_molecules[j]
+
+                    key_map = match_molecules(prev_molecule, next_molecule)
+                    animations2.extend([
+                        TransformMatchingTex(prev_title, next_title),
+                        TransformMatchingShapesCustom(prev_molecule, next_molecule, key_map=key_map)
+                    ])
+
+            self.play(*animations1, run_time=1)
+            self.play(*animations2, run_time=1.5)
             self.wait(duration=0.5)
-            self.play(
-                TransformMatchingTex(prev_title, next_title), 
-                TransformMatchingShapesCustom(prev_moleucule, next_molecule, key_map=key_map), 
-                FadeOut(prev_enzyme, target_position=next_molecule, scale=0.5),
-                run_time=2
-            )
+
+            if len(title) > 1 and title[0] == title[1]:
+                prev_titles = next_titles
+                prev_molecules = next_molecules
+                next_titles = [Tex(title[0], font_size=64, substrings_to_isolate=substrings_to_isolate).to_edge(UP)]
+                next_molecules = [MMoleculeObject.from_mol_file(filename=files_path / (title[0] + '.sdf')).scale(0.8)]
+
+                animations = []
+                animations.append(TransformMatchingTex(prev_titles[0], next_titles[0]))
+                animations.append(TransformMatchingShapesCustom(prev_molecules[0], next_molecules[0], key_map=key_map))
+
+                n_molecules *= len(title)
+                next_purural_sign = Tex('x{}'.format(n_molecules), font_size=48).next_to(next_titles[0], RIGHT)
+                for prev_title, prev_molecule in zip(prev_titles[1:], prev_molecules[1:]):
+                    animations.append(FadeIn(next_purural_sign))
+                    animations.append(FadeOut(prev_title, target_position=next_purural_sign, scale=0.3))
+                    animations.append(FadeOut(prev_molecule, target_position=next_purural_sign, scale=0.3))
+
+                self.play(*animations, run_time=1)
 
     # def render(self):
     #     super().render(preview=True)
@@ -197,7 +286,7 @@ def match_bonds(atoms1, atoms2, bonds1, bonds2, bond1_idx, bond2_idx, atoms1_cou
         return False
 
 
-def match_molecules(molecule1, molecule2, matching_level=10, verbose=True):
+def match_molecules(molecule1, molecule2, matching_level=10, verbose=False):
     '''
     # Guideline of the bond matching 
     ### 1: One atom forming a bond is same as an atom forming a bond in another molecule
