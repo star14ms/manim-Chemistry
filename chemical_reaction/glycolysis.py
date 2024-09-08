@@ -30,6 +30,8 @@ molecules = [
     ('phosphoenolpyruvate',),
     ('pyruvate',),
 ]
+substrings_to_isolate = ['glucose', 'fructose', 'phosphate', 'phospho', 'glycer', 'pyruvate']
+
 enzymes = [
     'hexokinase',
     'phosphoglucose isomerase',
@@ -42,8 +44,18 @@ enzymes = [
     'enolase',
     'pyruvate kinase',
 ]
-substrings_to_isolate = ['glucose', 'fructose', 'phosphate', 'phospho', 'glycer', 'pyruvate']
-
+by_reactants_products = [
+    (('ATP',), ('ADP',)),
+    (),
+    (('ATP',), ('ADP',)),
+    (),
+    (),
+    (('NAD+',), ('NADH',)),
+    (('ADP',), ('ATP',)),
+    (),
+    (),
+    (('ADP',), ('ATP',)),
+]
 
 class SceneCairo(Scene):
     # Two D Manim Chemistry objects require Cairo renderer
@@ -63,7 +75,7 @@ for i, molecule in enumerate(molecules):
 
 class Glycolysis(Scene):
     config.renderer = "cairo"
-    def construct(self):
+    def construct(self, verbose=False):
         if len(molecules[0]) == 1:
             position_title = [UP]
             position_molecule = [ORIGIN]
@@ -88,9 +100,25 @@ class Glycolysis(Scene):
         self.play(*animations, run_time=1)
         self.wait(duration=0.5)
 
-        for i, (title, enzyme) in enumerate(zip(molecules[1:], enzymes)):
+        for i, (title, enzyme, byreaction) in enumerate(zip(molecules[1:], enzymes, by_reactants_products)):
             next_enzyme = Tex(enzyme, font_size=48).to_edge(DOWN)
-            self.play(Write(next_enzyme), run_time=1)
+
+            animations = [Write(next_enzyme)]
+            if len(byreaction) != 0:
+                (byreactants, byproducts) = byreaction
+
+                byreactants_group = VMobject()
+                for byreactant in byreactants:
+                    byreactants_group.add(Tex(byreactant, font_size=48))
+                byproducts_group = VMobject()
+                for byproduct in byproducts:
+                    byproducts_group.add(Tex(byproduct, font_size=48))
+                byreactants_group.arrange(DOWN).to_edge(LEFT, buff=2)
+                byproducts_group.arrange(DOWN).to_edge(RIGHT, buff=2)
+                animations.append(Write(byreactants_group))
+
+            self.play(*animations, run_time=1)
+            self.wait(duration=0.5)
 
             prev_enzyme = next_enzyme
             prev_titles = next_titles
@@ -111,7 +139,8 @@ class Glycolysis(Scene):
                     is_prev_enzyme_used = True
 
                 animations2 = []
-                key_map = match_molecules(prev_molecules[0], next_molecules[0], prev_titles[0].tex_string, next_titles[0].tex_string)
+                print('Matching molecules | Reactant: [yellow]{}[/yellow], Product: [yellow]{}[/yellow]'.format(prev_titles[0].tex_string, next_titles[0].tex_string))
+                key_map = match_molecules(prev_molecules[0], next_molecules[0], verbose=verbose)
                 animations2.extend([
                     TransformMatchingTex(prev_titles[0], next_titles[0]),
                     TransformMatchingTex(prev_purural_sign, next_purural_sign),
@@ -147,15 +176,25 @@ class Glycolysis(Scene):
                         prev_title = prev_titles[0] if len(prev_titles) == 1 else prev_titles[j]
                         prev_molecule = prev_molecules[0] if len(prev_titles) == 1 else prev_molecules[j]
 
-                    key_map = match_molecules(prev_molecule, next_molecule, prev_title.tex_string, next_title.tex_string)
+                    print('Matching molecules | Reactant: [yellow]{}[/yellow], Product: [yellow]{}[/yellow]'.format(prev_title.tex_string, next_title.tex_string))
+                    key_map = match_molecules(prev_molecule, next_molecule, verbose=verbose)
+
                     animations2.extend([
                         TransformMatchingTex(prev_title, next_title),
                         TransformMatchingShapesCustom(prev_molecule, next_molecule, key_map=key_map)
                     ])
 
+            animations2 = [*animations2]
+            if len(byreaction) > 0 and len(byreaction[0]) != 0:
+                animations2.append(TransformMatchingShapes(byreactants_group, byproducts_group, transform_mismatches=True))
+
             self.play(*animations1, run_time=1)
             self.play(*animations2, run_time=1.5)
-            self.wait(duration=0.5)
+
+            if len(byreaction) == 2 and len(byreaction[1]) != 0:
+                self.play(FadeOut(byproducts_group), run_time=1)
+            else:
+                self.wait(duration=0.5)
 
             if len(title) > 1 and title[0] == title[1]:
                 prev_titles = next_titles
@@ -299,7 +338,7 @@ def match_bonds(atoms1, atoms2, bonds1, bonds2, bond1_idx, bond2_idx, atoms1_cou
         return False
 
 
-def match_molecules(molecule1, molecule2, molecule1_name, molecule2_name, matching_level=10, verbose=True):
+def match_molecules(molecule1, molecule2, matching_level=10, verbose=False):
     '''
     # Guideline of the bond matching 
     ### 1: One atom forming a bond is same as an atom forming a bond in another molecule
@@ -308,9 +347,6 @@ def match_molecules(molecule1, molecule2, molecule1_name, molecule2_name, matchi
     ### 4: 3 + Whose neibor atoms are also matched
     ### 5: 4 + Whose neibor's neibor atoms are also matched
     '''
-    if verbose and molecule1_name and molecule2_name:
-        print('Matching molecules | Reactant: [yellow]{}[/yellow], Product: [yellow]{}[/yellow]'.format(molecule1_name, molecule2_name))
-
     atoms1, _  = molecule1.get_atoms()
     bonds1 = molecule1.get_bonds()
     atoms2, _ = molecule2.get_atoms()
