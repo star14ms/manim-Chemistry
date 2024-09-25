@@ -15,53 +15,42 @@ import math
 
 
 script_path = Path(__file__).absolute().parent.parent
-files_path = script_path / "data/glycolysis"
+files_path = script_path / "data/citric_acid_cycle"
 font = 'Comic Sans MS'
 molecules = [
-    ('glucose',),
-    ('glucose-6-phosphate',),
-    ('fructose-6-phosphate',),
-    ('fructose-1,6-bisphosphate',),
-    ('glyceraldehyde-3-phosphate', 'dihydroxyacetone phosphate'),
-    ('glyceraldehyde-3-phosphate', 'glyceraldehyde-3-phosphate'),
-    ('1,3-bisphosphoglycerate',),
-    ('3-phosphoglycerate',),
-    ('2-phosphoglycerate',),
-    ('phosphoenolpyruvate',),
-    ('pyruvate',),
+    ('oxaloacetate',),
+    ('citrate',),
+    ('isocitrate',),
+    ('alpha-ketoglutarate',),
+    ('succinyl-CoA',),
+    ('succinate',),
+    ('fumarate',),
+    ('malate',),
+    ('oxaloacetate',),
 ]
-substrings_to_isolate = ['glucose', 'fructose', 'phosphate', 'phospho', 'glycer', 'pyruvate']
+substrings_to_isolate = ['ate', 'citrate', 'succin']
 
 enzymes = [
-    'hexokinase',
-    'phosphoglucose isomerase',
-    'phosphofructokinase',
-    'aldolase',
-    'triose phosphate isomerase',
-    'glyceraldehyde-3-phosphate dehydrogenase',
-    'phosphoglycerate kinase',
-    'phosphoglyceromutase',
-    'enolase',
-    'pyruvate kinase',
+    'citrate synthase',
+    'aconitase',
+    'isocitrate dehydrogenase',
+    'alpha-ketoglutarate dehydrogenase', # ɑ-ketoglutarate dehydrogenase
+    'succinyl-CoA synthetase',
+    'succinate dehydrogenase',
+    'fumarase',
+    'malate dehydrogenase',
 ]
 by_reactants_products = [
-    (('ATP',), ('ADP',)),
+    (('H2O',), ('',)),
     (),
-    (('ATP',), ('ADP',)),
-    (),
-    (),
-    (('NAD+','Pi'), ('NADH','')),
-    (('ADP',), ('ATP',)),
-    (),
-    (),
-    (('ADP',), ('ATP',)),
+    (('NAD+', 'CO2'), ('NADH', '')),
+    (('NAD+', 'CO2', 'coenzyme A'), ('NADH', '', '')),
+    (('GDP', 'Pi', ''), ('GTP', '', 'coenzyme A')), # Pᵢ
+    (('FAD',), ('FADH2',)),
+    (('H2O',), ('',)),
+    (('NAD+', 'H2O'), ('NADH', '')),
 ]
-molecules_parts_to_separate = {
-    'fructose-1,6-bisphosphate': [
-        {'bonds': (0, 1, 2, 3, 8, 10, 11, 12, 13, 17), 'atoms': (1, 4, 5, 7, 9, 10, 11, 15, 16, 19)},
-        {'bonds': (4, 5, 6, 7, 9, 14, 15, 16, 18, 19), 'atoms': (2, 3, 6, 8, 12, 13, 14, 17, 18, 20)},
-    ]
-}
+molecules_parts_to_separate = {}
 
 class SceneCairo(Scene):
     # Two D Manim Chemistry objects require Cairo renderer
@@ -79,7 +68,7 @@ for i, molecule in enumerate(molecules):
     globals()[class_name].molecule = molecule[-1]
 
 
-class Glycolysis(Scene):
+class CitricAcidCycle(Scene):
     config.renderer = "cairo"
     def construct(self, verbose=False):
         if len(molecules[0]) == 1:
@@ -134,7 +123,7 @@ class Glycolysis(Scene):
             if len(title) == 1:
                 next_titles = [Tex(title[0], font_size=64, substrings_to_isolate=substrings_to_isolate).to_edge(UP)]
                 next_purural_sign = Tex('x{}'.format(n_molecules) if n_molecules > 1 else '', font_size=48).next_to(next_titles[0], RIGHT)
-                next_molecules = [MMoleculeObject.from_mol_file(filename=files_path / (title[0] + '.sdf')).scale(0.8)]
+                next_molecules = [MMoleculeObject.from_mol_file(filename=files_path / (title[0] + '.sdf')).scale(0.8 if title[0] != 'succinyl-CoA' else 0.3)]
 
                 animations1 = []
                 is_prev_enzyme_used = False
