@@ -1,0 +1,143 @@
+31348
+  -OEChem-09102412082D
+
+ 18 17  0     0  0  0  0  0  0999 V2000
+    4.5000   -0.7321    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    5.7320    0.1340    0.0000 O   0  5  0  0  0  0  0  0  0  0  0  0
+    4.8660    1.6340    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.2680   -1.8660    0.0000 O   0  5  0  0  0  0  0  0  0  0  0  0
+    2.0000    1.8660    0.0000 O   0  5  0  0  0  0  0  0  0  0  0  0
+    4.0000   -1.8660    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.0000    0.1340    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    4.0000    0.1340    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.1340   -0.3660    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.5000    1.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.8660    0.6340    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.1340   -1.3660    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.5000    1.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.9219    0.2166    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.5234   -0.4737    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    4.0826    1.2120    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    3.3923    1.6106    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    4.1900   -1.2690    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  8  1  0  0  0  0
+  1 18  1  0  0  0  0
+  2 11  1  0  0  0  0
+  3 11  2  0  0  0  0
+  4 12  1  0  0  0  0
+  5 13  1  0  0  0  0
+  6 12  2  0  0  0  0
+  7 13  2  0  0  0  0
+  8  9  1  0  0  0  0
+  8 10  1  0  0  0  0
+  8 11  1  0  0  0  0
+  9 12  1  0  0  0  0
+  9 14  1  0  0  0  0
+  9 15  1  0  0  0  0
+ 10 13  1  0  0  0  0
+ 10 16  1  0  0  0  0
+ 10 17  1  0  0  0  0
+M  CHG  3   2  -1   4  -1   5  -1
+M  END
+> <PUBCHEM_COMPOUND_CID>
+31348
+
+> <PUBCHEM_COMPOUND_CANONICALIZED>
+1
+
+> <PUBCHEM_CACTVS_COMPLEXITY>
+211
+
+> <PUBCHEM_CACTVS_HBOND_ACCEPTOR>
+7
+
+> <PUBCHEM_CACTVS_HBOND_DONOR>
+1
+
+> <PUBCHEM_CACTVS_ROTATABLE_BOND>
+2
+
+> <PUBCHEM_CACTVS_SUBSKEYS>
+AAADcYBgOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGgAACAAADESAgAAACAAAAgAIAACQCAIAAAAAAAAAAAFAAAABABYAAAAAQAAFIAABAADLJgAKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+
+> <PUBCHEM_IUPAC_OPENEYE_NAME>
+citrate
+
+> <PUBCHEM_IUPAC_CAS_NAME>
+2-hydroxypropane-1,2,3-tricarboxylate
+
+> <PUBCHEM_IUPAC_NAME_MARKUP>
+2-hydroxypropane-1,2,3-tricarboxylate
+
+> <PUBCHEM_IUPAC_NAME>
+2-hydroxypropane-1,2,3-tricarboxylate
+
+> <PUBCHEM_IUPAC_SYSTEMATIC_NAME>
+2-oxidanylpropane-1,2,3-tricarboxylate
+
+> <PUBCHEM_IUPAC_TRADITIONAL_NAME>
+citrate
+
+> <PUBCHEM_IUPAC_INCHI>
+InChI=1S/C6H8O7/c7-3(8)1-6(13,5(11)12)2-4(9)10/h13H,1-2H2,(H,7,8)(H,9,10)(H,11,12)/p-3
+
+> <PUBCHEM_IUPAC_INCHIKEY>
+KRKNYBCHXYNGOX-UHFFFAOYSA-K
+
+> <PUBCHEM_XLOGP3>
+0.2
+
+> <PUBCHEM_EXACT_MASS>
+189.00352749
+
+> <PUBCHEM_MOLECULAR_FORMULA>
+C6H5O7-3
+
+> <PUBCHEM_MOLECULAR_WEIGHT>
+189.10
+
+> <PUBCHEM_OPENEYE_CAN_SMILES>
+C(C(=O)[O-])C(CC(=O)[O-])(C(=O)[O-])O
+
+> <PUBCHEM_OPENEYE_ISO_SMILES>
+C(C(=O)[O-])C(CC(=O)[O-])(C(=O)[O-])O
+
+> <PUBCHEM_CACTVS_TPSA>
+141
+
+> <PUBCHEM_MONOISOTOPIC_WEIGHT>
+189.00352749
+
+> <PUBCHEM_TOTAL_CHARGE>
+-3
+
+> <PUBCHEM_HEAVY_ATOM_COUNT>
+13
+
+> <PUBCHEM_ATOM_DEF_STEREO_COUNT>
+0
+
+> <PUBCHEM_ATOM_UDEF_STEREO_COUNT>
+0
+
+> <PUBCHEM_BOND_DEF_STEREO_COUNT>
+0
+
+> <PUBCHEM_BOND_UDEF_STEREO_COUNT>
+0
+
+> <PUBCHEM_ISOTOPIC_ATOM_COUNT>
+0
+
+> <PUBCHEM_COMPONENT_COUNT>
+1
+
+> <PUBCHEM_CACTVS_TAUTO_COUNT>
+1
+
+> <PUBCHEM_COORDINATE_TYPE>
+1
+5
+255
+
+$$$$
